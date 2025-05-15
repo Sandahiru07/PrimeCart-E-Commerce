@@ -16,7 +16,8 @@ async function connectDB() {
             bufferCommands: false,
         };
 
-        cached.promise = mongoose.connect(`${process.env.MONGODB_URI}/quickcart`, opts).then((mongooseInstance) => {
+        // Use the URI directly from env without appending
+        cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongooseInstance) => {
             return mongooseInstance;
         });
     }
