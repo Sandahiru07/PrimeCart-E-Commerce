@@ -1,7 +1,7 @@
 import { Inngest } from "inngest";
-import connectDB from "./db";
 import User from "@/models/User";
 import Order from "@/models/Order";
+import connectDB from "./db";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "quickcart-next" });
@@ -85,30 +85,27 @@ export const syncUserDeletion = inngest.createFunction(
 
 //Inngest function to create user's order in database
 export const createUserOrder = inngest.createFunction(
-  {
-    id:'create-user-order',
-    batchEvents:{
-      maxSize: 5,
-      timeout: '5s'
-    }
-  },
-  {event: 'order/created'},
-  async ({events}) => {
+  { id: "create-user-order" },
+  { event: "order/created" },
+  async ({ event, step }) => {
+    console.log("Function triggered");
 
-    const orders = events.map((event)=> {
-      return {
-        userId: event.data.userId,
-        items: event.data.items,
-        amount: event.data.amount,
-        address: event.data.address,
-        date: event.data.date
+    try {
+      await connectDB();
+      console.log("Connected to MongoDB");
+
+      const orders = event.data.orders;
+      if (!orders || !Array.isArray(orders)) {
+        console.error("Invalid order data:", orders);
+        return { success: false, error: "Invalid order data" };
       }
-    })
 
-    await connectDB()
-    await Order.insertMany(orders)
-
-    return { success: true, processed: orders.length };
-
+      const result = await Order.insertMany(orders);
+      console.log("Orders inserted:", result);
+      return { success: true, result };
+    } catch (error) {
+      console.error("Error inserting orders:", error);
+      return { success: false, error: error.message };
+    }
   }
-)
+);
