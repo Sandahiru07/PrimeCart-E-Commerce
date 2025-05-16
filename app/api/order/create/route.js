@@ -25,15 +25,13 @@ export async function POST(request) {
         await inngest.send({
             name: 'order/created',
             data: {
-                orders: [{
-                    userId,
-                    address,
-                    items,
-                    amount: amount + Math.floor(amount * 0.02),
-                    date: new Date()
-                }]
+                userId,
+                address: formattedAddress,
+                items,
+                amount: amount + Math.floor(amount * 0.02),
+                date: new Date()
             }
-        })
+        });
 
         // clear user cart
         const user = await User.findById(userId)

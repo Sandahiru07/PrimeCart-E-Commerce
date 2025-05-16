@@ -87,17 +87,17 @@ export const syncUserDeletion = inngest.createFunction(
 export const createUserOrder = inngest.createFunction(
   { id: "create-user-order" },
   { event: "order/created" },
-  async ({ event, step }) => {
+  async ({ event }) => {
     console.log("Function triggered");
+    console.log("Incoming order data:", event.data);
 
     try {
       await connectDB();
       console.log("Connected to MongoDB");
 
-      const order = event.data;
+      const result = await Order.create(event.data);
+      console.log("Order created:", result);
 
-      const result = await Order.create(order);
-      console.log("Order inserted:", result);
       return { success: true, result };
     } catch (error) {
       console.error("Error inserting order:", error);
