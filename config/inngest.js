@@ -94,17 +94,13 @@ export const createUserOrder = inngest.createFunction(
       await connectDB();
       console.log("Connected to MongoDB");
 
-      const orders = event.data.orders;
-      if (!orders || !Array.isArray(orders)) {
-        console.error("Invalid order data:", orders);
-        return { success: false, error: "Invalid order data" };
-      }
+      const order = event.data;
 
-      const result = await Order.insertMany(orders);
-      console.log("Orders inserted:", result);
+      const result = await Order.create(order);
+      console.log("Order inserted:", result);
       return { success: true, result };
     } catch (error) {
-      console.error("Error inserting orders:", error);
+      console.error("Error inserting order:", error);
       return { success: false, error: error.message };
     }
   }

@@ -8,12 +8,12 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
     try {
-        
+
         const { userId } = getAuth(request)
         const { address, items } = await request.json()
 
         if (!address || items.length === 0) {
-            return NextResponse.json({ success: false, message: 'Invalid data' });   
+            return NextResponse.json({ success: false, message: 'Invalid data' });
         }
 
         //calculate amount using items
@@ -25,11 +25,13 @@ export async function POST(request) {
         await inngest.send({
             name: 'order/created',
             data: {
-                userId,
-                address,
-                items,
-                amount: amount + Math.floor(amount * 0.02),
-                date: Date.now()
+                orders: [{
+                    userId,
+                    address,
+                    items,
+                    amount: amount + Math.floor(amount * 0.02),
+                    date: new Date()
+                }]
             }
         })
 
@@ -37,7 +39,7 @@ export async function POST(request) {
         const user = await User.findById(userId)
         user.cartItems = {}
         await user.save()
-        
+
         return NextResponse.json({ success: true, message: "Order Placed" })
 
     } catch (error) {
