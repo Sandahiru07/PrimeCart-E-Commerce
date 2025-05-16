@@ -92,7 +92,7 @@ export const createUserOrder = inngest.createFunction(
       timeout: '5s'
     }
   },
-  { event: 'order/created'},
+  { event: 'order/created' },
   async ({ events, step }) => {
     console.log("Processing order/created events:", events);
 
@@ -104,8 +104,15 @@ export const createUserOrder = inngest.createFunction(
       date: event.data.date
     }));
 
-    await connectDB();
-    await Order.insertMany(orders);
+    try {
+      await connectDB();
+      console.log("✅ Connected to MongoDB");
+
+      await Order.insertMany(orders);
+      console.log("✅ Orders inserted:", orders);
+    } catch (error) {
+      console.error("❌ Failed to insert orders:", error);
+    }
 
     console.log("Orders inserted into MongoDB:", orders);
 
