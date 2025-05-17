@@ -1,7 +1,7 @@
 import { Inngest } from "inngest";
+import connectDB from "./db";
 import User from "@/models/User";
 import Order from "@/models/Order";
-import connectDB from "./db";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "quickcart-next" });
@@ -85,23 +85,30 @@ export const syncUserDeletion = inngest.createFunction(
 
 //Inngest function to create user's order in database
 export const createUserOrder = inngest.createFunction(
-  { id: "create-user-order" },
-  { event: "order/created" },
-  async ({ event }) => {
-    console.log("Function triggered");
-    console.log("Incoming order data:", event.data);
-
-    try {
-      await connectDB();
-      console.log("Connected to MongoDB");
-
-      const result = await Order.create(event.data);
-      console.log("Order created:", result);
-
-      return { success: true, result };
-    } catch (error) {
-      console.error("Error inserting order:", error);
-      return { success: false, error: error.message };
+  {
+    id:'create-user-order',
+    batchEvents:{
+      maxSize: 5,
+      timeout: '5s'
     }
+  },
+  {event: 'order/created'},
+  async ({events}) => {
+
+    const orders = events.map((event)=> {
+      return {
+        userId: event.data.userId,
+        items: event.data.items,
+        amount: event.data.amount,
+        address: event.data.address,
+        date: event.data.date
+      }
+    })
+
+    await connectDB()
+    await Order.insertMany(orders)
+
+    return { success: true, processed: orders.length };
+
   }
-);
+)
